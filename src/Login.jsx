@@ -6,12 +6,8 @@ import { login, loginMfa } from './services/api';
 const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [mfaToken, setMfaToken] = useState('');
-  const [mfaRequired, setMfaRequired] = useState(false);
-  const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [errorTimer, setErrorTimer] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -20,30 +16,13 @@ const Login = ({ onLoginSuccess }) => {
     setError('');
 
     try {
-      if (mfaRequired) {
-
-        const res = await loginMfa(userId, mfaToken);
-
-        onLoginSuccess();
-      } else {
-
-        const res = await login(username, password);
-
-        if (res.status === 'mfa_required') {
-          setMfaRequired(true);
-          setUserId(res.userId);
-
-        } else {
-          onLoginSuccess();
-        }
-      }
+      await login(username, password);
+      onLoginSuccess();
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
       
-      // Clear existing timer if any
       if (errorTimer) clearTimeout(errorTimer);
       
-      // Set new timer to clear error after 4 seconds
       const timer = setTimeout(() => {
         setError('');
       }, 4000);
@@ -158,102 +137,49 @@ const Login = ({ onLoginSuccess }) => {
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {!mfaRequired ? (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Username</label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter your username" 
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    required
-                    style={{ 
-                      width: '100%', 
-                      background: 'rgba(255, 255, 255, 0.03)', 
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '0.75rem',
-                      padding: '0.9rem 1.25rem', 
-                      color: 'white', 
-                      fontSize: '0.95rem',
-                      outline: 'none',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }} 
-                    onFocus={(e) => {
-                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                      e.target.style.background = 'rgba(255, 255, 255, 0.07)';
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                      e.target.style.background = 'rgba(255, 255, 255, 0.03)';
-                    }}
-                  />
-                </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Username</label>
+              <input 
+                type="text" 
+                placeholder="Enter your username" 
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                required
+                style={{ 
+                  width: '100%', 
+                  background: 'rgba(255, 255, 255, 0.03)', 
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '0.75rem',
+                  padding: '0.9rem 1.25rem', 
+                  color: 'white', 
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }} 
+              />
+            </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Password</label>
-                  </div>
-                  <div style={{ position: 'relative' }}>
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      placeholder="••••••••" 
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      required
-                      style={{ 
-                        width: '100%', 
-                        background: 'rgba(255, 255, 255, 0.03)', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '0.75rem',
-                        padding: '0.9rem 1.25rem', 
-                        color: 'white', 
-                        fontSize: '0.95rem',
-                        outline: 'none',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      }} 
-                      onFocus={(e) => {
-                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                        e.target.style.background = 'rgba(255, 255, 255, 0.07)';
-                      }}
-                      onBlur={(e) => {
-                        e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                        e.target.style.background = 'rgba(255, 255, 255, 0.03)';
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255, 255, 255, 0.25)', cursor: 'pointer', transition: 'color 0.2s' }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.5)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.25)'}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', marginTop: '-0.25rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 400 }}>
-                    <input type="checkbox" style={{ accentColor: '#000', width: '16px', height: '16px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }} /> Keep me logged in
-                  </label>
-                </div>
-              </>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
-                <h3 style={{ color: 'white', margin: 0, fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>Authentication</h3>
-                <input 
-                  type="text" 
-                  placeholder="000000" 
-                  maxLength={6}
-                  value={mfaToken}
-                  onChange={e => setMfaToken(e.target.value)}
-                  required
-                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid white', color: 'white', fontSize: '2.5rem', textAlign: 'center', outline: 'none', letterSpacing: '0.3em', fontWeight: 800, fontFamily: 'monospace' }} 
-                />
-                <p style={{ color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.85rem', fontWeight: 400 }}>Enter verification code.</p>
-              </div>
-            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Password</label>
+              <input 
+                type="password" 
+                placeholder="••••••••" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                style={{ 
+                  width: '100%', 
+                  background: 'rgba(255, 255, 255, 0.03)', 
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '0.75rem',
+                  padding: '0.9rem 1.25rem', 
+                  color: 'white', 
+                  fontSize: '0.95rem',
+                  outline: 'none',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                }} 
+              />
+            </div>
 
             <motion.button 
               whileHover={{ scale: 1.01 }}
@@ -274,7 +200,7 @@ const Login = ({ onLoginSuccess }) => {
                 boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
               }}
             >
-              {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : (mfaRequired ? 'Verify Access' : 'Sign In')}
+              {loading ? <Loader2 size={20} className="animate-spin mx-auto" /> : 'Sign In'}
             </motion.button>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '0.5rem 0' }}>

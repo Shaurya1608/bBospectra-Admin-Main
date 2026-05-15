@@ -4,6 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const api = axios.create({
     baseURL: API_BASE_URL,
+    withCredentials: true,
 });
 
 // Add a request interceptor to add the auth token to every request
@@ -15,15 +16,32 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Add a response interceptor to handle 401s
+// Add a response interceptor to handle 401s and token refresh
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response && error.response.status === 401) {
-            // Unauthorized - clear token and redirect/refresh
-            localStorage.removeItem('spectra_admin_token');
-            localStorage.removeItem('spectra_admin_user');
-            window.location.reload(); // This will trigger the App.jsx to show Login
+    async (error) => {
+        const originalRequest = error.config;
+
+        // If error is 401 and we haven't retried yet
+        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                // Attempt to refresh the token
+                const response = await api.post('/auth/refresh-token');
+                if (response.data.status === 'success') {
+                    // Update the access token in localStorage (for legacy header fallback)
+                    localStorage.setItem('spectra_admin_token', response.data.token);
+                    
+                    // Retry the original request with the new token
+                    return api(originalRequest);
+                }
+            } catch (refreshError) {
+                // Refresh failed - logout user
+                localStorage.removeItem('spectra_admin_token');
+                localStorage.removeItem('spectra_admin_user');
+                window.location.reload();
+            }
         }
         return Promise.reject(error);
     }
@@ -80,6 +98,11 @@ export const getMfaSetup = async () => {
 
 export const verifyMfaSetup = async (token) => {
     const response = await api.post('/auth/mfa-verify', { token });
+    return response.data;
+};
+
+export const verifyMfaStepup = async (token) => {
+    const response = await api.post('/auth/verify-mfa-stepup', { token });
     return response.data;
 };
 

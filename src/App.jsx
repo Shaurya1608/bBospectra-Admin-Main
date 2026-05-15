@@ -45,6 +45,7 @@ import EditorialTab from './components/tabs/EditorialTab';
 import GalleryTab from './components/tabs/GalleryTab';
 import SecurityTab from './components/tabs/SecurityTab';
 import AuditTab from './components/tabs/AuditTab';
+import MfaModal from './components/MfaModal';
 
 function App() {
   const [journalTree, setJournalTree] = useState([]);
@@ -53,6 +54,7 @@ function App() {
   const [submitting, setSubmitting] = useState(false);
   const [health, setHealth] = useState({ db: 'CHECKING', cloudinary: 'OK' });
   const [activeTab, setActiveTab] = useState('analytics');
+  const [mfaModal, setMfaModal] = useState({ isOpen: false, onResolve: null });
 
   // Handle Google OAuth callback redirect
   useEffect(() => {
@@ -97,6 +99,30 @@ function App() {
         setIsAuthenticated(false);
       }
     );
+  };
+
+  // Helper to handle MFA Step-up Challenges
+  const withMfa = async (action) => {
+    try {
+      return await action();
+    } catch (err) {
+      if (err.response?.status === 403 && err.response?.data?.status === 'mfa_required') {
+        return new Promise((resolve, reject) => {
+          setMfaModal({ 
+            isOpen: true, 
+            onResolve: async () => {
+              try {
+                const result = await action();
+                resolve(result);
+              } catch (retryErr) {
+                reject(retryErr);
+              }
+            } 
+          });
+        });
+      }
+      throw err;
+    }
   };
 
   // Active Context States (The Flow)
@@ -312,7 +338,7 @@ function App() {
         formData.append('affiliation', articleData.affiliation);
         formData.append('categoryId', activeCategory._id);
         formData.append('file', articleData.file);
-        await uploadArticle(formData);
+        await withMfa(() => uploadArticle(formData));
         showAlert('Success', 'Article published successfully!');
       }
       
@@ -328,7 +354,7 @@ function App() {
   const handleDeleteArticle = async (id) => {
     showConfirm('Delete Article', 'Are you sure you want to permanently delete this article?', async () => {
       try {
-        await deleteArticle(id);
+        await withMfa(() => deleteArticle(id));
         await fetchData();
       } catch (error) {
         showAlert('Error', 'Failed to delete article');
@@ -342,7 +368,7 @@ function App() {
       `Are you sure you want to delete the "${title}" section? This will also permanently delete ALL articles inside it.`, 
       async () => {
         try {
-          await deleteCategory(id);
+          await withMfa(() => deleteCategory(id));
           setActiveCategory(null);
           await fetchData();
         } catch (error) {
@@ -360,7 +386,7 @@ function App() {
       async () => {
         try {
           console.log('Confirming delete for Year ID:', id);
-          await deleteYear(id);
+          await withMfa(() => deleteYear(id));
           console.log('Delete successful');
           setActiveYear(null);
           await fetchData();
@@ -418,9 +444,9 @@ function App() {
     setSubmitting(true);
     try {
       if (editingAbout && editingAbout._id) {
-        await updateAboutSection(editingAbout._id, newAboutData);
+        await withMfa(() => updateAboutSection(editingAbout._id, newAboutData));
       } else {
-        await createAboutSection(newAboutData);
+        await withMfa(() => createAboutSection(newAboutData));
       }
       setNewAboutData({ title: '', content: '', sectionType: 'history', order: 0 });
       setEditingAbout(null);
@@ -449,9 +475,9 @@ function App() {
     setSubmitting(true);
     try {
       if (editingMember) {
-        await updateEditorialMember(editingMember._id, newMemberData);
+        await withMfa(() => updateEditorialMember(editingMember._id, newMemberData));
       } else {
-        await createEditorialMember(newMemberData);
+        await withMfa(() => createEditorialMember(newMemberData));
       }
       setNewMemberData({ name: '', role: '', email: '', department: '', location: '', memberType: 'core', order: 0 });
       setEditingMember(null);
@@ -466,7 +492,7 @@ function App() {
   const handleDeleteMember = async (id) => {
     showConfirm('Delete Member', 'Are you sure you want to remove this member from the editorial board?', async () => {
       try {
-        await deleteEditorialMember(id);
+        await withMfa(() => deleteEditorialMember(id));
         await fetchEditorialData();
       } catch (error) {
         showAlert('Error', 'Delete failed');
@@ -486,7 +512,7 @@ function App() {
     formData.append('category', galleryData.category);
     formData.append('order', galleryData.order);
     try {
-      await uploadGalleryImage(formData);
+      await withMfa(() => uploadGalleryImage(formData));
       setGalleryData({ title: '', description: '', category: 'general', order: 0, image: null });
       await fetchGalleryData();
       showAlert('Success', 'Image uploaded and compressed!');
@@ -501,12 +527,12 @@ function App() {
     if (!editingGallery) return;
     setSubmitting(true);
     try {
-      await updateGalleryImage(editingGallery._id, {
+      await withMfa(() => updateGalleryImage(editingGallery._id, {
         title: galleryData.title,
         description: galleryData.description,
         category: galleryData.category,
         order: galleryData.order,
-      });
+      }));
       setEditingGallery(null);
       setGalleryData({ title: '', description: '', category: 'general', order: 0, image: null });
       await fetchGalleryData();
@@ -535,7 +561,7 @@ function App() {
     setSubmitting(true);
     try {
       await verifyMfaSetup(mfaSetupToken);
-      showAlert('Success', 'MFA has been enabled. Next time you log in, you will be asked for a code.');
+      showAlert('Success', 'MFA has been enabled. Sensitive actions (like deleting or uploading) will now require a verification code for maximum security.');
       setMfaQrCode(null);
       setMfaSetupToken('');
     } catch (error) {
@@ -607,6 +633,7 @@ function App() {
               { id: 'about', label: 'Journal Info', icon: Info },
               { id: 'editorial', label: 'Team Board', icon: Users },
               { id: 'gallery', label: 'Photos', icon: Image },
+              { id: 'security', label: 'Security Center', icon: ShieldCheck },
               { id: 'audit', label: 'Security Log', icon: Shield },
             ].map((item) => (
               <button
@@ -647,6 +674,7 @@ function App() {
             { id: 'about', icon: Info, label: 'Info' },
             { id: 'editorial', icon: Users, label: 'Team' },
             { id: 'gallery', icon: Image, label: 'Photos' },
+            { id: 'security', icon: ShieldCheck, label: 'Guard' },
             { id: 'audit', icon: Shield, label: 'Sec' },
           ].map((item) => (
             <button
@@ -679,7 +707,9 @@ function App() {
                 {activeTab === 'analytics' ? 'Analytics Overview' : 
                  activeTab === 'publish' ? 'Publishing Center' :
                  activeTab === 'explore' ? 'Content Repository' :
-                 activeTab === 'about' ? 'Journal Architect' : 'Team Directory'}
+                 activeTab === 'about' ? 'Journal Architect' : 
+                 activeTab === 'security' ? 'Security Center' :
+                 activeTab === 'audit' ? 'Security Audit' : 'Team Directory'}
               </h2>
               <p className="m-0 text-[#92B775] text-[10px] font-black uppercase tracking-[0.2em] mt-1">Editorial Administrator</p>
             </div>
@@ -904,6 +934,11 @@ function App() {
           </div>
         )}
       </AnimatePresence>
+      <MfaModal 
+        isOpen={mfaModal.isOpen} 
+        onClose={() => setMfaModal({ ...mfaModal, isOpen: false })}
+        onSuccess={mfaModal.onResolve}
+      />
     </>
   );
 }
