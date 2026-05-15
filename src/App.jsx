@@ -54,6 +54,26 @@ function App() {
   const [health, setHealth] = useState({ db: 'CHECKING', cloudinary: 'OK' });
   const [activeTab, setActiveTab] = useState('analytics');
 
+  // Handle Google OAuth callback redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const userStr = params.get('user');
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(decodeURIComponent(userStr));
+        localStorage.setItem('spectra_admin_token', token);
+        localStorage.setItem('spectra_admin_user', JSON.stringify(user));
+        setIsAuthenticated(true);
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } catch (e) {
+        console.error('Error parsing Google login data:', e);
+      }
+    }
+  }, []);
+
   // Centralized Theme Palette
   const P = {
     primary: '#133215',    // Brand Dark Green
@@ -182,7 +202,8 @@ function App() {
 
   const checkHealth = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/health');
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${baseUrl}/health`);
       const data = await response.json();
       setHealth({ db: data.database, cloudinary: 'OK' });
     } catch (error) {
