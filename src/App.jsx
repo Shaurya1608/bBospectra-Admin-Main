@@ -102,9 +102,17 @@ function App() {
     showConfirm(
       'Confirm Logout',
       'Are you sure you want to end your administrative session?',
-      () => {
-        apiLogout();
-        setIsAuthenticated(false);
+      async () => {
+        try {
+          await apiLogout();
+        } catch (err) {
+          console.error('Logout error:', err);
+        } finally {
+          setIsAuthenticated(false);
+          localStorage.removeItem('spectra_admin_token');
+          localStorage.removeItem('spectra_admin_user');
+          window.location.href = '/login'; // Force a clean start
+        }
       }
     );
   };
