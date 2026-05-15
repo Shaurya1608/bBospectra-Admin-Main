@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   Calendar, BookOpen, Layers, Plus, 
   ChevronRight, ArrowRight, Upload, 
-  Loader2, CheckCircle, FileText 
+  Loader2, CheckCircle, FileText, Shield
 } from 'lucide-react';
 
 const PublishTab = ({
@@ -30,7 +30,8 @@ const PublishTab = ({
   setArticleData,
   submitting,
   editingArticle,
-  setEditingArticle
+  setEditingArticle,
+  isElevated
 }) => {
   const handleItalic = (fieldId) => {
     const el = document.getElementById(fieldId);
@@ -387,8 +388,35 @@ const PublishTab = ({
            </div>
 
            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-             <button onClick={handleUploadArticle} disabled={submitting} className="primary" style={{ padding: '1rem', fontSize: '0.9rem', fontWeight: 950, borderRadius: '1.25rem', background: P.primary, color: 'white', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', boxShadow: `0 10px 20px ${P.primary}30` }}>
-               {submitting ? <Loader2 size={24} className="animate-spin" /> : 'Publish Now'}
+             <button 
+               onClick={handleUploadArticle} 
+               disabled={submitting} 
+               className="primary" 
+               style={{ 
+                 padding: '1rem', 
+                 fontSize: '0.9rem', 
+                 fontWeight: 950, 
+                 borderRadius: '1.25rem', 
+                 background: isElevated ? P.primary : '#133215', 
+                 color: isElevated ? 'white' : '#92B775', 
+                 border: isElevated ? 'none' : `1px solid ${P.primary}20`,
+                 cursor: submitting ? 'not-allowed' : 'pointer', 
+                 display: 'flex', 
+                 alignItems: 'center', 
+                 justifyContent: 'center', 
+                 gap: '0.75rem', 
+                 boxShadow: isElevated ? `0 10px 20px ${P.primary}30` : '0 10px 30px rgba(19, 50, 21, 0.1)' 
+               }}
+             >
+               {submitting ? (
+                 <Loader2 size={24} className="animate-spin" />
+               ) : !isElevated ? (
+                 <>
+                   <Shield size={20} /> Verify & Publish
+                 </>
+               ) : (
+                 'Publish Now'
+               )}
              </button>
              <button onClick={() => setPublishStep(2)} style={{ padding: '1rem', background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 850, cursor: 'pointer' }}>Edit Details</button>
            </div>

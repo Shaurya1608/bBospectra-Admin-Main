@@ -90,6 +90,14 @@ function App() {
     border: 'rgba(19, 50, 21, 0.1)'
   };
 
+  const [mfaVerifiedAt, setMfaVerifiedAt] = useState(null);
+
+  const isElevated = useMemo(() => {
+    if (!mfaVerifiedAt) return false;
+    const diff = Date.now() - mfaVerifiedAt;
+    return diff < 15 * 60 * 1000; // 15 minutes
+  }, [mfaVerifiedAt]);
+
   const handleLogout = () => {
     showConfirm(
       'Confirm Logout',
@@ -104,7 +112,9 @@ function App() {
   // Helper to handle MFA Step-up Challenges
   const withMfa = async (action) => {
     try {
-      return await action();
+      const result = await action();
+      setMfaVerifiedAt(Date.now());
+      return result;
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.status === 'mfa_required') {
         return new Promise((resolve, reject) => {
@@ -113,6 +123,7 @@ function App() {
             onResolve: async () => {
               try {
                 const result = await action();
+                setMfaVerifiedAt(Date.now());
                 resolve(result);
               } catch (retryErr) {
                 reject(retryErr);
@@ -772,6 +783,7 @@ function App() {
               submitting={submitting}
               editingArticle={editingArticle}
               setEditingArticle={setEditingArticle}
+              isElevated={isElevated}
             />
           ) : activeTab === 'about' ? (
             <AboutTab 
