@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #133215;
+  --color-primary-light: #92B775;
+  --color-primary-dark: #0d240e;
+  --color-bg-main: #eef4ec;
+  --color-sidebar-bg: #133215;
+  --color-card-bg: rgba(255, 255, 255, 0.95);
+  --color-text-main: #133215;
+  --color-text-muted: rgba(19, 50, 21, 0.6);
+  --color-border: rgba(19, 50, 21, 0.1);
+}
+
+:root {
+  --primary: #133215;
+  --primary-light: #92B775;
+  --primary-dark: #0d240e;
+  --bg-main: #eef4ec;
+  --sidebar-bg: #133215;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --text-main: #133215;
+  --text-muted: rgba(19, 50, 21, 0.6);
+  --border: rgba(19, 50, 21, 0.1);
+  --font-playfair: 'Playfair Display', serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+body {
+  @apply bg-[#eef4ec] text-[#133215] font-inter text-sm antialiased;
+  font-family: var(--font-inter);
+}
+
+.custom-scrollbar::-webkit-scrollbar { @apply w-1; }
+.custom-scrollbar::-webkit-scrollbar-track { @apply bg-transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-[#92B775]/30 rounded-full; }
+
+.glass-card {
+  @apply bg-white/90 backdrop-blur-md rounded-2xl p-6 border border-[#92B775]/10 shadow-sm transition-all duration-200 hover:shadow-lg hover:shadow-[#133215]/[0.02];
+}
+
+.primary-btn {
+  @apply bg-[#133215] text-[#92B775] px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all hover:bg-[#133215]/90 hover:-translate-y-px hover:shadow-lg active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed;
+}
+
+.admin-container {
+  @apply grid h-screen bg-[#eef4ec] transition-all duration-300;
+  grid-template-columns: 260px 1fr;
+}
+
+@media (max-width: 1024px) {
+  .admin-container {
+    @apply grid-cols-[80px_1fr];
+  }
+  .sidebar-text { @apply hidden; }
+  .analytics-main-grid, .explore-grid {
+    @apply !grid-cols-1;
+  }
+  .explore-grid > div {
+    @apply !border-r-0 border-b border-slate-200;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    @apply grid-cols-1;
+  }
+  .sidebar {
+    @apply !hidden;
+  }
+  .mobile-nav {
+    @apply !flex;
+  }
+}
+
+.mobile-nav {
+  @apply hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 justify-around items-center z-[1000] shadow-[0_-4px_20px_rgba(0,0,0,0.05)];
+}
+
+/* Grid & Spacing Utilities */
+.stat-card-row {
+  @apply grid gap-5;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.analytics-main-grid {
+  @apply grid gap-6;
+  grid-template-columns: 1.5fr 1fr;
+}
+
+.explore-grid {
+  @apply grid;
+  grid-template-columns: 180px 240px 1fr;
+}
+
+.responsive-grid {
+  @apply grid gap-5;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .mobile-hide { @apply !hidden; }
+  .responsive-grid, .stat-card-row {
+    @apply !grid-cols-1;
+  }
+  .header-stack {
+    @apply !flex-col !items-start !gap-4;
+  }
+  
+  .main-content-wrapper {
+    @apply p-4 !w-screen !overflow-x-hidden;
+  }
+  
+  .glass-card {
+    @apply !p-4;
+  }
+}
+
+.animate-in {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-xl border border-white/20;
+}
