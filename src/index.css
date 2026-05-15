@@ -10,6 +10,9 @@
   --color-text-main: #133215;
   --color-text-muted: rgba(19, 50, 21, 0.6);
   --color-border: rgba(19, 50, 21, 0.1);
+
+  --font-inter: "Inter", sans-serif;
+  --font-playfair: "Playfair Display", serif;
 }
 
 :root {

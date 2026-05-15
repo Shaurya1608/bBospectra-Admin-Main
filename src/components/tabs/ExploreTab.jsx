@@ -272,7 +272,10 @@ const ExploreTab = ({
                             {art.context.year.year} • {art.context.issue.title}
                           </span>
                         </div>
-                        <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.4 }}>{art.title}</p>
+                        <p 
+                          style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.4 }}
+                          dangerouslySetInnerHTML={{ __html: art.title }}
+                        />
                         <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>{art.authors}</p>
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
@@ -380,7 +383,10 @@ const ExploreTab = ({
                             <FileText size={16} />
                           </div>
                           <div style={{ flexGrow: 1, minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.4, letterSpacing: '-0.01em' }}>{art.title}</p>
+                            <p 
+                              style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.4, letterSpacing: '-0.01em' }}
+                              dangerouslySetInnerHTML={{ __html: art.title }}
+                            />
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '0.4rem' }}>
                               <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                 <Users size={12} /> {art.authors}
@@ -405,6 +411,7 @@ const ExploreTab = ({
                                   abstract: art.abstract,
                                   keywords: art.keywords?.join(', ') || '',
                                   doi: art.doi || '',
+                                  affiliation: art.affiliation || '',
                                   file: null
                                 });
                                 setPublishStep(2);

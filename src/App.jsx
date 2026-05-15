@@ -97,6 +97,7 @@ function App() {
     abstract: '',
     keywords: '',
     doi: '',
+    affiliation: '',
     file: null
   });
 
@@ -131,6 +132,8 @@ function App() {
   const [mfaQrCode, setMfaQrCode] = useState(null);
   const [mfaSecret, setMfaSecret] = useState('');
   const [mfaSetupToken, setMfaSetupToken] = useState('');
+
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const showConfirm = (title, message, onConfirm) => {
     setModal({ isOpen: true, title, message, onConfirm, isAlert: false });
@@ -268,6 +271,7 @@ function App() {
           abstract: articleData.abstract,
           keywords: articleData.keywords,
           doi: articleData.doi,
+          affiliation: articleData.affiliation,
           categoryId: activeCategory._id
         });
         showAlert('Success', 'Article metadata updated!');
@@ -284,13 +288,14 @@ function App() {
         formData.append('abstract', articleData.abstract);
         formData.append('keywords', articleData.keywords);
         formData.append('doi', articleData.doi);
+        formData.append('affiliation', articleData.affiliation);
         formData.append('categoryId', activeCategory._id);
         formData.append('file', articleData.file);
         await uploadArticle(formData);
         showAlert('Success', 'Article published successfully!');
       }
       
-      setArticleData({ title: '', authors: '', abstract: '', keywords: '', doi: '', file: null });
+      setArticleData({ title: '', authors: '', abstract: '', keywords: '', doi: '', affiliation: '', file: null });
       await fetchData();
     } catch (error) {
       showAlert('Operation Failed', error.response?.data?.message || 'There was an error processing your article.');
@@ -391,7 +396,7 @@ function App() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (editingAbout) {
+      if (editingAbout && editingAbout._id) {
         await updateAboutSection(editingAbout._id, newAboutData);
       } else {
         await createAboutSection(newAboutData);
@@ -837,13 +842,41 @@ function App() {
                 <button 
                   onClick={async () => { 
                     if (modal.onConfirm) {
-                      await modal.onConfirm();
+                      setIsDeleting(true);
+                      try {
+                        await modal.onConfirm();
+                      } finally {
+                        setIsDeleting(false);
+                        setModal({ ...modal, isOpen: false }); 
+                      }
+                    } else {
+                      setModal({ ...modal, isOpen: false }); 
                     }
-                    setModal({ ...modal, isOpen: false }); 
                   }}
-                  style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', border: 'none', background: modal.isAlert ? '#0f172a' : '#ef4444', color: 'white', fontWeight: 800, cursor: 'pointer', fontSize: '0.8rem' }}
+                  disabled={isDeleting}
+                  style={{ 
+                    padding: '0.75rem 1.5rem', 
+                    borderRadius: '1rem', 
+                    border: 'none', 
+                    background: modal.isAlert ? '#0f172a' : '#ef4444', 
+                    color: 'white', 
+                    fontWeight: 800, 
+                    cursor: isDeleting ? 'not-allowed' : 'pointer', 
+                    fontSize: '0.8rem',
+                    opacity: isDeleting ? 0.7 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
                 >
-                  {modal.isAlert ? 'Got it' : 'Confirm Action'}
+                  {isDeleting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    modal.isAlert ? 'Got it' : 'Confirm Action'
+                  )}
                 </button>
               </div>
             </motion.div>

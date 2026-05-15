@@ -61,8 +61,13 @@ const AboutTab = ({
           <style>{`
             .responsive-about-grid {
               display: grid;
-              grid-template-columns: 1fr 1fr;
+              grid-template-columns: 1fr 1fr 1fr;
               gap: 1rem;
+            }
+            @media (max-width: 1024px) {
+              .responsive-about-grid {
+                grid-template-columns: 1fr 1fr;
+              }
             }
             @media (max-width: 768px) {
               .responsive-about-grid {
@@ -90,6 +95,28 @@ const AboutTab = ({
                 </div>
                 <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginBottom: '1rem', lineHeight: 1.5 }}>Update ICCB info.</p>
                 <button onClick={() => { const s = aboutSections.find(s => s.sectionType === 'founder'); if(s) { setEditingAbout(s); setNewAboutData(s); setShowModal(true); } }} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.85rem', border: '1px solid #e2e8f0', background: 'white', fontWeight: 800, fontSize: '0.75rem', color: '#133215', cursor: 'pointer' }}>Edit Info</button>
+            </div>
+
+            {/* CARD 3: JOURNAL METRICS (IMPACT FACTOR) */}
+            <div style={{ background: '#f8fafc', padding: '1.25rem', borderRadius: '1.25rem', border: '1px solid #f1f5f9' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div style={{ background: '#FF9800', color: 'white', padding: '0.4rem', borderRadius: '0.5rem' }}><Layers size={16} /></div>
+                  <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 900, color: '#133215', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Impact Factor</h4>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600, marginBottom: '1rem', lineHeight: 1.5 }}>
+                  Current: {aboutSections.find(s => s.sectionType === 'metrics')?.content || "SJIF 8.546"}
+                </p>
+                <button 
+                  onClick={() => {
+                    const section = aboutSections.find(s => s.sectionType === 'metrics') || { title: 'Impact Factor', content: 'SJIF 8.546', sectionType: 'metrics', order: 5 };
+                    setEditingAbout(section);
+                    setNewAboutData(section);
+                    setShowModal(true);
+                  }}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '0.85rem', border: '1px solid #e2e8f0', background: 'white', fontWeight: 800, fontSize: '0.75rem', color: '#FF9800', cursor: 'pointer' }}
+                >
+                  Edit SJIF No.
+                </button>
             </div>
           </div>
 

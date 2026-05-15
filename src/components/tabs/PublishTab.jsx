@@ -32,6 +32,32 @@ const PublishTab = ({
   editingArticle,
   setEditingArticle
 }) => {
+  const handleItalic = (fieldId) => {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = el.value;
+    const selectedText = text.substring(start, end);
+    const before = text.substring(0, start);
+    const after = text.substring(end);
+    
+    const newValue = `${before}<i>${selectedText}</i>${after}`;
+    
+    // Update state based on field
+    if (fieldId === 'article-title') {
+      setArticleData({ ...articleData, title: newValue });
+    } else if (fieldId === 'article-abstract') {
+      setArticleData({ ...articleData, abstract: newValue });
+    }
+
+    // Restore focus and selection (slightly ahead to be inside the tags or after)
+    setTimeout(() => {
+      el.focus();
+      el.setSelectionRange(start + 3, end + 3);
+    }, 0);
+  };
   return (
     <motion.div 
       key="publish-tab"
@@ -236,10 +262,21 @@ const PublishTab = ({
 
           <form className="main-content-wrapper" onSubmit={(e) => { e.preventDefault(); setPublishStep(3); }} style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div className="form-group">
-              <label style={{ marginBottom: '0.5rem', display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>ARTICLE TITLE</label>
-              <input 
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>ARTICLE TITLE</label>
+                <button 
+                  type="button"
+                  onClick={() => handleItalic('article-title')}
+                  style={{ padding: '0.2rem 0.6rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '0.4rem', fontSize: '0.7rem', fontWeight: 900, color: P.primary, cursor: 'pointer', fontStyle: 'italic' }}
+                >
+                  I
+                </button>
+              </div>
+              <textarea 
+                id="article-title"
+                rows={2}
                 placeholder="Enter the full scholarly title of the article..." 
-                style={{ width: '100%', padding: '0.85rem 1.25rem', borderRadius: '0.85rem', background: '#fcfcfc', border: '1.5px solid #f1f5f9', fontSize: '0.9rem', fontWeight: 600 }}
+                style={{ width: '100%', padding: '0.85rem 1.25rem', borderRadius: '0.85rem', background: '#fcfcfc', border: '1.5px solid #f1f5f9', fontSize: '0.9rem', fontWeight: 600, lineHeight: 1.4 }}
                 value={articleData.title} onChange={e => setArticleData({...articleData, title: e.target.value})} required 
               />
             </div>
@@ -264,8 +301,27 @@ const PublishTab = ({
             </div>
 
             <div className="form-group">
-              <label style={{ marginBottom: '0.5rem', display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>SUMMARY</label>
+              <label style={{ marginBottom: '0.5rem', display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>AUTHOR AFFILIATION / DEPARTMENT</label>
+              <input 
+                placeholder="e.g. Department of Zoology, Guru Ghasidas Vishwavidyalaya..." 
+                style={{ width: '100%', padding: '0.85rem 1.25rem', borderRadius: '0.85rem', background: '#fcfcfc', border: '1.5px solid #f1f5f9', fontSize: '0.85rem', fontWeight: 600 }}
+                value={articleData.affiliation} onChange={e => setArticleData({...articleData, affiliation: e.target.value})} 
+              />
+            </div>
+
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 800, color: '#475569' }}>SUMMARY / ABSTRACT</label>
+                <button 
+                  type="button"
+                  onClick={() => handleItalic('article-abstract')}
+                  style={{ padding: '0.2rem 0.6rem', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '0.4rem', fontSize: '0.7rem', fontWeight: 900, color: P.primary, cursor: 'pointer', fontStyle: 'italic' }}
+                >
+                  I
+                </button>
+              </div>
               <textarea 
+                id="article-abstract"
                 rows={4} placeholder="Provide a concise summary of the research methodology and findings..." 
                 style={{ width: '100%', padding: '1rem', borderRadius: '1rem', background: '#fcfcfc', border: '1.5px solid #f1f5f9', fontSize: '0.85rem', lineHeight: 1.6, fontWeight: 500 }}
                 value={articleData.abstract} onChange={e => setArticleData({...articleData, abstract: e.target.value})} required 
